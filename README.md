@@ -1,9 +1,11 @@
 # Patrones Creacionales - Documentación y Diagramas
 
-Este proyecto implementa tres patrones de diseño creacionales fundamentales en Java:
+Este proyecto implementa cinco patrones de diseño creacionales fundamentales en Java:
 1. **Abstract Factory** (Fábrica Abstracta)
 2. **Singleton** (Instancia Única)
 3. **Factory Method** (Método Fábrica)
+4. **Builder** (Constructor)
+5. **Prototype** (Prototipo)
 
 ---
 
@@ -13,6 +15,8 @@ Este proyecto implementa tres patrones de diseño creacionales fundamentales en 
 - [Patrón Singleton](#patrón-singleton)
 - [Patrón Factory Method](#patrón-factory-method)
 - [Cómo Ejecutar](#cómo-ejecutar)
+- [Patrón Builder](#patrón-builder)
+- [Patrón Prototype](#patrón-prototype)
 
 ---
 
@@ -356,6 +360,100 @@ logistica.planificarEntrega();  // Entrega por mar
 
 ---
 
+## Patrón Builder
+
+### Propósito
+Separar la construcción de un objeto complejo de su representación, armándolo paso a paso y permitiendo omitir las partes opcionales.
+
+### Diagrama de Clases
+
+```mermaid
+classDiagram
+    class Computador {
+        -procesador: String
+        -ramGB: int
+        -almacenamientoGB: int
+        -tarjetaGrafica: String
+        -wifi: boolean
+        -bluetooth: boolean
+        -Computador(Builder)
+        +mostrar() void
+    }
+    class Builder {
+        +Builder(String, int)
+        +conAlmacenamiento(int) Builder
+        +conTarjetaGrafica(String) Builder
+        +conWifi() Builder
+        +conBluetooth() Builder
+        +build() Computador
+    }
+    class MainBuilder {
+        +main(String[]) void
+    }
+
+    Computador +-- Builder : clase interna
+    Builder ..> Computador : crea
+    MainBuilder --> Builder : usa
+```
+
+### Estructura del Código
+
+| Rol | Clase | Descripción |
+|-----|-------|-------------|
+| **Product** | `Computador` | Objeto complejo e inmutable, con constructor privado |
+| **Builder** | `Computador.Builder` | Un método por cada parte opcional y `build()` al final |
+| **Client** | `MainBuilder` | Encadena llamadas para armar el objeto |
+
+### Ventajas
+- **Legibilidad**: `.conWifi().conBluetooth()` se lee como una frase
+- **Sin constructores gigantes**: no hay que recordar el orden de los parámetros
+- **Inmutabilidad**: el objeto final no cambia después de `build()`
+
+---
+
+## Patrón Prototype
+
+### Propósito
+Crear nuevos objetos copiando una instancia existente en lugar de construirlos desde cero.
+
+### Diagrama de Clases
+
+```mermaid
+classDiagram
+    class Prototipo {
+        <<interface>>
+        +clonar() Prototipo
+    }
+    class Enemigo {
+        -nombre: String
+        -vida: int
+        -habilidades: List~String~
+        +clonar() Enemigo
+        +mostrar() void
+    }
+    class MainPrototype {
+        +main(String[]) void
+    }
+
+    Prototipo <|.. Enemigo
+    MainPrototype --> Prototipo : pide copias
+```
+
+### Estructura del Código
+
+| Rol | Clase/Interfaz | Descripción |
+|-----|----------------|-------------|
+| **Prototype** | `Prototipo` | Interfaz que declara `clonar()` |
+| **ConcretePrototype** | `Enemigo` | Se copia a sí mismo (copia profunda de la lista) |
+| **Client** | `MainPrototype` | Clona el enemigo base y modifica solo lo que cambia |
+
+### Ventajas
+- **Rapidez**: copiar es más fácil que repetir toda la configuración
+- **Independencia**: el cliente no necesita conocer cómo se construye el objeto
+- **Copia profunda**: modificar un clon no afecta al original
+
+---
+
 ## Cómo Ejecutar
 
 ### Requisitos
@@ -376,6 +474,12 @@ java -cp out com.patrones.singleton.MainSingleton
 
 # Ejecutar Factory Method
 java -cp out com.patrones.factorymethod.MainFactoryMethod
+
+# Ejecutar Builder
+java -cp out com.patrones.builder.MainBuilder
+
+# Ejecutar Prototype
+java -cp out com.patrones.prototype.MainPrototype
 ```
 
 ### Con Maven (si existe pom.xml)
@@ -384,6 +488,8 @@ java -cp out com.patrones.factorymethod.MainFactoryMethod
 mvn compile exec:java -Dexec.mainClass="com.patrones.abstractfactory.Muebles"
 mvn compile exec:java -Dexec.mainClass="com.patrones.singleton.MainSingleton"
 mvn compile exec:java -Dexec.mainClass="com.patrones.factorymethod.MainFactoryMethod"
+mvn compile exec:java -Dexec.mainClass="com.patrones.builder.MainBuilder"
+mvn compile exec:java -Dexec.mainClass="com.patrones.prototype.MainPrototype"
 ```
 
 ### Salida Esperada
@@ -428,17 +534,42 @@ Entregando por tierra en camión.
 === FIN DE LA DEMOSTRACIÓN ===
 ```
 
----
+#### Builder
+```
+=== DEMOSTRACIÓN PATRÓN BUILDER ===
+
+--- PC BÁSICO ---
+Computador -> Procesador: Intel Core i3 | RAM: 8 GB | Disco: 256 GB | Gráfica: integrada | WiFi: no | Bluetooth: no
+
+--- PC GAMER ---
+Computador -> Procesador: AMD Ryzen 7 | RAM: 32 GB | Disco: 1000 GB | Gráfica: NVIDIA RTX 4070 | WiFi: sí | Bluetooth: sí
+
+=== FIN DE LA DEMOSTRACIÓN ===
+```
+
+#### Prototype
+```
+=== DEMOSTRACIÓN PATRÓN PROTOTYPE ===
+
+--- RESULTADOS ---
+Orco | Vida: 100 | Habilidades: [Golpe, Escudo]
+Orco Jefe | Vida: 300 | Habilidades: [Golpe, Escudo, Grito de guerra]
+Orco Soldado | Vida: 100 | Habilidades: [Golpe, Escudo]
+
+¿El original conserva sus 2 habilidades? Sí: la copia es independiente.
+
+=== FIN DE LA DEMOSTRACIÓN ===
+```
 
 ## Resumen Comparativo
 
-| Aspecto | Abstract Factory | Singleton | Factory Method |
-|---------|-----------------|-----------|----------------|
-| **Problema** | Familias de productos relacionados | Una sola instancia global | Delegar creación a subclases |
-| **Alcance** | Múltiples productos | Una clase | Un producto por Creator |
-| **Flexibilidad** | Cambiar familia completa | Acceso global controlado | Extender con nuevos productos |
-| **Complejidad** | Media | Baja | Media |
-| **Uso típico** | UI toolkits, temas, configuraciones | Logging, configuración, cache | Frameworks, librerías |
+| Aspecto | Abstract Factory | Singleton | Factory Method | Builder | Prototype |
+|---------|------------------|-----------|----------------|---------|-----------|
+| **Problema** | Familias de productos relacionados | Una sola instancia global | Delegar creación a subclases | Objeto con muchas partes opcionales | Crear de nuevo es costoso o repetitivo |
+| **Alcance** | Múltiples productos | Una clase | Un producto por Creator | Un objeto complejo | Copias de un objeto existente |
+| **Flexibilidad** | Cambiar familia completa | Acceso global controlado | Extender con nuevos productos | Armar variantes paso a paso | Clonar y cambiar solo lo necesario |
+| **Complejidad** | Media | Baja | Media | Media | Baja |
+| **Uso típico** | UI toolkits, temas, configuraciones | Logging, configuración, cache | Frameworks, librerías | Configuraciones, consultas, pedidos | Juegos, documentos, plantillas |
 
 ---
 
